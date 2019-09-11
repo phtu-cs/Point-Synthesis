@@ -8,6 +8,7 @@ Code for Point Pattern Synthesis via Irregular Convolution
 ## Prerequisite
 
 - Pytorch
+- Matlab (make sure matlab is in your Path)
 
 ## Run
 
