@@ -5,30 +5,19 @@ set kernel1 = (2 1 1 1 1 2 1 2 1 1 0.5 0.5 0.5 1 1 1 2 1 1 1 1 2 1 1 2 1 1 0.5 2
 set kernel2 = (4 3 4 3 3 4 3 4 3   2 2 2 2 4 4 3 4 3 3 3 3 4 3 4 4 4 4 2 3)
 
 
-set j = 17
-while ($j < 18)
+set j = 1
+while ($j < 30)
    echo $exemplars[$j]	
    echo kernel1 = $kernel1[$j]
    echo kernel2 = $kernel2[$j]
 
-#python3 HierarchicalEndtoEndOptimizationSamplesPosition.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j] --structure_layers "" --output_dir results_nostruc
-#python3 SampleMergingOptimization.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j] --structure_layers "" --input_dir results_nostruc --output_dir results_nostruc
-
-
-#python3 HierarchicalEndtoEndOptimizationSamplesPosition.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j] --texture_layers "" --output_dir results_notexture
-#python3 SampleMergingOptimization.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j] --texture_layers "" --output_dir results_notexture --input_dir results_notexture
-
-
-#python3 HierarchicalEndtoEndOptimizationSamplesPosition.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j] --histogram_weight 0 --output_dir results_nohist
-#python3 SampleMergingOptimization.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j] --histogram_weight 0 --output_dir results_nohist --input_dir results_nohist
-
 
 python3 HierarchicalEndtoEndOptimizationSamplesPosition.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j]
 
-#python3 SampleMergingOptimization.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j] --output_dir results_final --input_dir results_final
+python3 SampleMergingOptimization.py --kernel_sigma1 $kernel1[$j] --kernel_sigma2 $kernel2[$j] --exemplar_filename $exemplars[$j] --output_dir results_final --input_dir results_final
 
 
-#matlab -nodesktop -nosplash -r "MergePoints_v5('$exemplars[$j]','results_final','results_final','final');exit()"
+matlab -nodesktop -nosplash -r "MergePoints('$exemplars[$j]','results_final','results_final','final');exit()"
    @ j++
 
 end 
