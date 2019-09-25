@@ -16,7 +16,7 @@ If you have questions, please feel free to contact Peihan Tu (phtu@cs.umd.edu).
 ## Starting ##
 
 The current released codes are tested on Ubuntu 16.04. To train this network properly, please install the follow dependencies:
-- Python 2.7.13
+- Python 3.6
 - CUDA 8.0
 - Cudnn 6.0
 - Pytorch
