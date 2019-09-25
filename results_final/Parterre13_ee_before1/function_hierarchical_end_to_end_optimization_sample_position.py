@@ -37,7 +37,10 @@ def hierarchical_end_to_end_optimization_sample_position(init_guess, target_exem
         img_res_input = round(img_res * upscaling_rate)
         kernel_sigma_input = kernel_sigma/upscaling_rate
 
+        # if outerloop%2 == 0:
         from point2image import Point2Image
+        # else:
+        #     from point2image_merge import Point2Image
 
         target_p2i = Point2Image(2, 0, kernel_sigma=kernel_sigma,
                                               feature_sigma=0, res=img_res)
@@ -45,6 +48,7 @@ def hierarchical_end_to_end_optimization_sample_position(init_guess, target_exem
                                               feature_sigma=0, res=img_res_input)
 
         if optim_method == 'LBFGS':
+        # input_soft_points = torch.randn(img_res_input,img_res_input).to(device)
             optimizer = optim.LBFGS([init_guess.requires_grad_()],lr=0.5)
         elif optim_method == 'Adam':
             optimizer = optim.Adam([init_guess.requires_grad_()], lr =lr_list[outerloop])

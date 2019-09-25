@@ -1,7 +1,4 @@
 from __future__ import print_function
-import numpy as np
-import math
-import matplotlib.pyplot as plt
 from utils import poisson
 
 def generate_possion_dis(num_points, min, max):
@@ -24,12 +21,6 @@ def generate_possion_dis(num_points, min, max):
     points = (points-pmin)/(pmax-pmin)*(max-min)+min
 
 
-
-    # print(poisson_generator.format_points_string(points))
-    #
-    # fig = plt.figure(figsize=(10,10))
-    # poisson_generator.generate_ui(fig, points)
-    # plt.show()
     return points
 
 if __name__ == '__main__':

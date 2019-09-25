@@ -52,8 +52,6 @@ class TVloss(nn.Module):
 
 def gram_matrix(input):
     a, b, c, d = input.size()  # a=batch size(=1)
-    # b=number of feature maps
-    # (c,d)=dimensions of a f. map (N=c*d)
 
     features = input.view(a * b, c * d)  # resise F_XL into \hat F_XL
 
@@ -68,8 +66,6 @@ def deep_corr_matrix(input,q,m):
     a, b, c, d = input.size()  # a=batch size(=1)
     assert (c == d)
     assert (q == m)
-
-    # features = input.squeeze(0)
     R = torch.zeros(b, 2*c-1, 2*d-1).to(device)
 
 
@@ -79,18 +75,12 @@ def deep_corr_matrix(input,q,m):
 
     x_grid = x_cord.repeat(2*c-1).view(2*c-1, 2*c-1)
     y_grid = x_grid.t()
-    # xy_grid = torch.stack([x_grid, y_grid], dim=-1)
 
-
-    p = (c-1)//2
 
     xconv2 = nn.Conv2d(in_channels=1, out_channels=1,
                                      kernel_size=c,padding=c-1, groups=1, bias=False).to(device)
 
     center = (2*c-1)//2.0
-    enlargement = (q-c)//2.0
-
-    # Enlargement = floor((size(TrgfeatMat, 1) - size(SrcfeatMat, 1)) / 2);
 
 
     for i in range(b):
@@ -99,8 +89,6 @@ def deep_corr_matrix(input,q,m):
         corr_matrix = xconv2(input[:,i,:,:].unsqueeze(1))
         corr_matrix/=(x_grid*y_grid)
         R[i, :, :] = corr_matrix.squeeze(0).squeeze(0)
-        # out = R[:, int(center - c // 2 - (q-c)//2.0):int(center - c // 2 + c + math.ceil((q-c)/2.0)),
-        #       int(center - c // 2 - (q - c) // 2.0):int(center - c // 2 + c + math.ceil((q - c) / 2.0))]
         if q%2 == 1:
             out = R[:, int(center - c // 2 + math.ceil((c-q)/2.0)):int(center + math.ceil(c / 2) - 1 - (c-q)//2.0 + 1),
               int(center - c // 2 + math.ceil((c - q) / 2.0)):int(center + math.ceil(c / 2) - 1 - (c - q) // 2.0 + 1)]
@@ -108,12 +96,6 @@ def deep_corr_matrix(input,q,m):
             out = R[:, int(center - c // 2 + math.floor((c-q)/2.0)):int(center + math.ceil(c / 2) - 1 - math.ceil((c-q)/2.0) + 1),
                   int(center - c // 2 + math.floor((c - q) / 2.0)):int(
                       center + math.ceil(c / 2) - 1 - math.ceil((c - q) / 2.0) + 1)]
-
-
-    # for i in range(-q//2,q//2,1):
-    #     for j in range(-m//2,m//2,1):
-    #         R[:, i,j] = \
-    #             (features[:, :(c-abs(i)), :(d-abs(j))] * features[:, abs(i):, abs(j):]).sum(1).sum(1) / ((c-abs(i))*(d-abs(j)))
 
     return out
 
@@ -147,25 +129,15 @@ class HomoLoss(nn.Module):
         tmp[input < 0.5] = input[input < 0.5].pow(2)
         tmp[input >= 0.5] = (input[input >= 0.5] - 1 ).pow(2)
         self.loss = tmp.sum()
-        # self.output = input
         return self.loss
-
-    # def backward(self):
-    #     self.loss.backward(retain_graph=True)
-    #     return self.loss
 
 
 
 if __name__ == "__main__":
 
     input = Variable(torch.randn(1, 3, 7, 7).to(device),requires_grad=True)
-    # target = torch.randn(1, 3, 8, 8).to(device)
     R = deep_corr_matrix(input,7,7)
     import matplotlib.pyplot as plt
     plt.imshow(R.data[0,:,:])
-
-    # sl = StructureLoss(target)
-    # output = sl(input)
-    # sl_loss = sl.backward()
 
 

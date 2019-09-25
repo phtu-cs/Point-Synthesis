@@ -4,16 +4,6 @@ import torch.nn as nn
 from loss import TVloss, StyleLoss, StructureLoss
 import copy
 from histogram_loss import HistogramLoss
-from utils.utils_py import Normalization
-
-# style_layers_default = ['conv_1','conv_2', 'conv_3','conv_4', 'conv_5',
-#                         'conv_6','conv_7','conv_8','conv_9','conv_10',
-#                         'conv_11','conv_12','conv_13','conv_14','conv_15','conv_16']
-
-#
-# style_layers_default = []
-# structure_layers_default = []
-
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -23,23 +13,15 @@ def get_style_model_and_losses(cnn,
                                style_layers, structure_layers):
 
     histogram_layers = ['pool_4','pool_12']
-    # histogram_layers=[]
-    # compensent_feature_dim = target_texture_img.size()[1] % 3
-    #
-    # if
+
     input_channel = target_texture_img.size()[1]
 
-    # target_texture_img.size()[1] % 3 == 0:
-
-
-    # revise the first layer of cnn
     cnn = copy.deepcopy(cnn)
 
     output_channel, _, kernel_size, __ = cnn[0].weight.size()
 
     revised_cnn_weight = torch.zeros(output_channel, input_channel,
                                      cnn[0].kernel_size[0], cnn[0].kernel_size[1]).to(device)
-        # cnn[0].weight.data.clone()
 
     for ich in range(revised_cnn_weight.size()[1]):
         if ich < 3:
@@ -53,7 +35,6 @@ def get_style_model_and_losses(cnn,
                                             b*cnn[0].weight.data[:, t[1], :, :] +\
                                             c*cnn[0].weight.data[:, t[2], :, :]
 
-    # cnn[0] = \
     new_first_layer = nn.Conv2d(input_channel,cnn[0].out_channels,
                        kernel_size=cnn[0].kernel_size,padding=0,
                        dilation=cnn[0].dilation,groups=cnn[0].groups)
@@ -75,7 +56,6 @@ def get_style_model_and_losses(cnn,
     model = nn.Sequential()
     model.add_module("reflect_pad",reflect_pad)
     tv_loss = TVloss()
-    # model.add_module('padding',reflect_pad)
     model.add_module("tv_loss", tv_loss)
 
     i = 0  # increment every time we see a conv
@@ -83,7 +63,6 @@ def get_style_model_and_losses(cnn,
         if isinstance(layer, nn.Conv2d):
             i += 1
             name = 'conv_{}'.format(i)
-           # layer.weight = torch.nn.Parameter(layer.weight.mean()+layer.weight.std()*(torch.randn(layer.weight.size()).to(device)))
         elif isinstance(layer, nn.ReLU):
             name = 'relu_{}'.format(i)
             # The in-place version doesn't play very nicely with the ContentLoss
@@ -101,7 +80,6 @@ def get_style_model_and_losses(cnn,
         model.add_module(name, layer)
 
         if name in style_layers:
-            # add style loss:
             target_feature = model(target_texture_img).detach()
             style_loss = StyleLoss(target_feature)
             model.add_module("style_loss_{}".format(i), style_loss)

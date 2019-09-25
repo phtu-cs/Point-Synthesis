@@ -5,18 +5,15 @@ import torch
 import torch.optim as optim
 
 import matplotlib.pyplot as plt
-import math
 from utils.utils_py import save_image
 from utils.poisson_disk import generate_possion_dis
 import numpy as np
 from loss import StyleLoss
-from vgg_model_v2 import get_style_model_and_losses
+from vgg_model import get_style_model_and_losses
 import torchvision.models as models
-# from point2image import Point2Image_fast
 from histogram_loss import HistogramLoss
 from softpoint2image import SoftPoint2Image
-# from diff_func_v3 import soft_diff_func
-from diff_func_v2 import diff_func
+from diff_func import diff_func
 
 break_loop = False
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -33,7 +30,6 @@ def sample_merging_optimization(init_guess, target_exemplar, upscaling_rate, img
     number_points_in_target_exemplar = target_exemplar.size()[0]
 
     neighborhood_size = 0.1
-    neighborhood_size_input = neighborhood_size/upscaling_rate
 
     kernel_sigma_list = torch.linspace(kernel_sigma1, kernel_sigma2, 2)
     img_res_list = torch.linspace(img_res1, img_res2, 2)
@@ -60,12 +56,8 @@ def sample_merging_optimization(init_guess, target_exemplar, upscaling_rate, img
         img_res_input = round(img_res * upscaling_rate)
         kernel_sigma_input = kernel_sigma/upscaling_rate
 
-        # if outerloop%2 == 0:
-        # from point2image_merge import Point2Image as p2im
-        from point2image import Point2Image as p2i
 
-        # else:
-        #     from point2image_merge import Point2Image
+        from point2image import Point2Image as p2i
 
         target_p2i = p2i(2, 0, kernel_sigma=kernel_sigma,
                                               feature_sigma=0, res=img_res)
@@ -74,9 +66,8 @@ def sample_merging_optimization(init_guess, target_exemplar, upscaling_rate, img
 
 
         if optim_method == 'LBFGS':
-        # input_soft_points = torch.randn(img_res_input,img_res_input).to(device)
             optimizer = optim.LBFGS([blue_noise.requires_grad_()],lr=0.5)
-        # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1)
+
         elif optim_method == 'Adam':
             optimizer = optim.Adam([
                 {'params': blue_noise.requires_grad_(), 'lr': lr_list[outerloop]},
@@ -84,14 +75,9 @@ def sample_merging_optimization(init_guess, target_exemplar, upscaling_rate, img
                 {'params': init_guess_soft.requires_grad_(), 'lr': lr_list_init_guess_soft[outerloop]},
                 {'params': init_guess.requires_grad_(), 'lr': lr_list_init_guess[outerloop]}])
 
-        #{'params': init_guess.requires_grad_(), 'lr': lr_list[outerloop]/3}
 
         print('step:', lr_list[outerloop])
         target_texture_img = target_p2i(target_exemplar).repeat(1, 3, 1, 1).to(device)
-
-        min_target = target_texture_img.min()
-        max_target = target_texture_img.max()
-        # target_texture_img = Point2Image_fast.apply(target_exemplar,kernel_sigma,img_res).repeat(1, 3, 1, 1).to(device)
 
         fstyle_loss = StyleLoss(target_texture_img)
 
@@ -113,9 +99,6 @@ def sample_merging_optimization(init_guess, target_exemplar, upscaling_rate, img
 
         log_losses = []
 
-        # print('kernel_sigma_input: ', kernel_sigma_input)
-        # print('kernel_sigma: ', kernel_sigma)
-
         df_target = diff_func.apply(target_exemplar, neighborhood_size, 64, 2)
         df_target[0, 0, 28:36, 28:36] = 0
 
@@ -131,23 +114,16 @@ def sample_merging_optimization(init_guess, target_exemplar, upscaling_rate, img
                 init_guess_soft.data.clamp_(0, 1)
                 blue_noise_soft.data.clamp_(0, 1)
 
-                # scheduler.step()
+
                 input_pos = torch.cat((init_guess, blue_noise), 0)
                 input_soft = torch.cat((init_guess_soft, blue_noise_soft),0)
                 input = torch.cat((input_pos,input_soft),1)
 
                 input_soft_points = input_p2i(input)
-                #
-                # input_soft_points = Point2Image_fast.apply(init_guess,kernel_sigma_input,img_res_input)
-
-                max_input = input_soft_points.max()
-                min_input = input_soft_points.min()
 
 
-                # input_soft_points = (input_soft_points - min_input)/(max_input-min_input)*(max_target-min_target) + min_target
 
                 input_soft_points.clamp_(min=target_texture_img.min())
-                higher_bound_loss = (-torch.log(target_texture_img.max()-input_soft_points)).sum()
 
                 optimizer.zero_grad()
 
@@ -169,9 +145,7 @@ def sample_merging_optimization(init_guess, target_exemplar, upscaling_rate, img
 
                 fstyle_loss(input_density_img)
 
-                ftexture_score = fstyle_loss.loss
 
-                # img_hist_score = torch.zeros(1).to(device)
                 img_hist_score = histogram_weight*img_hist_loss.loss
 
                 texture_score = torch.zeros(1).to(device)
@@ -181,24 +155,16 @@ def sample_merging_optimization(init_guess, target_exemplar, upscaling_rate, img
                 for tl in texture_losses:
                     texture_score += texture_weight * tl.loss
                 for sl in structure_losses:
-                    structure_score += structure_weight * sl.loss  #100000
+                    structure_score += structure_weight * sl.loss
                 for hl in histogram_losses:
                     histogram_score += histogram_weight*hl.loss.data.item()
 
                 bound_score = torch.zeros(1).to(device)
-                    #1e-5 * (higher_bound_loss)
-
-                # if outerloop == None:
-                #     df_input = soft_diff_func.apply(input, neighborhood_size_input, 64, 2)
-                #     df_input[0, 0, 28:36, 28:36] = 0
-                #     diff_score = 0.5 * (df_input - df_target).pow(2).sum()
-                # else:
 
                 diff_score = torch.zeros(1).to(device)
 
                 ftexture_score = fstyle_loss.loss
 
-                # ftexture_score = torch.zeros(1).to(device)
 
                 loss = texture_score + structure_score + img_hist_score + histogram_score + bound_score + diff_score + ftexture_score  #+ homo_score
 

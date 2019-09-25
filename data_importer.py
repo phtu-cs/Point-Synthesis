@@ -1,9 +1,6 @@
-import os
 from numpy import array
 import torch
-import utils.vis as vis
 
-#Read point clouds from txt file
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def read_point_clouds(filename, D, split = ',' ,normalize=True):
@@ -79,15 +76,6 @@ def OneHot(points, dd_feature, dc_feature, edge_feature=0.2, d_space=2):
     output = torch.cat(output_list,1)
     channels[channels==2] =1
     return output,channels
-
-if __name__ == "__main__":
-    th_l = read_point_clouds('Texture3_1.txt', 2, normalize=True)
-    print(th_l)
-
-    vis.show_2d(th_l)
-
-
-
 
 
 
