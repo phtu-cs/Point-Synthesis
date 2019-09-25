@@ -29,9 +29,11 @@ git clone https://github.com/tph9608/Point-Synthesis.git
 
 ## Run
 
+You can simply generate results shown in the paper by runing
 ```bash
 ./exp.sh
 ```
+Please go into the results_final folder the check all of the results.
 
 ## Cite ##
 
