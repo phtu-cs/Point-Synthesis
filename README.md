@@ -13,7 +13,7 @@ You will need CUDA-compatible GPUs for generating results within several minutes
 
 If you have questions, please feel free to contact Peihan Tu (phtu@cs.umd.edu).
 
-![overview](overview.jpg)
+![overview](overview.png)
 
 ## Starting ##
 
