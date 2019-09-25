@@ -24,7 +24,7 @@ The current released codes are tested on Ubuntu 16.04. To train this network pro
 
 Clone our repo
 ```
-git clone git@github.com:zhijieW-94/SAGNet.git
+git clone https://github.com/tph9608/Point-Synthesis.git
 ```
 
 ## Run
